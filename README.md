@@ -1,4 +1,4 @@
-# VeritasAgent (V3)
+# VeritasAgent
 
 VeritasAgent is a deterministic, verifiable agent runtime designed for safety, reliability, and observability. It uses an LLM as a constrained planner and executes tools in a strictly controlled environment, logging every step with cryptographic integrity.
 
