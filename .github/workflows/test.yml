@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: '25'
           check-latest: true
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Run tests
         run: node --test --experimental-strip-types tests/*.test.ts
