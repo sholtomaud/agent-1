@@ -44,6 +44,7 @@ export class MCPClient {
 
       const timeout = setTimeout(() => {
         this.pendingCalls.delete(currentId);
+        this.proc.kill();
         reject(new Error('MCP call timed out'));
       }, this.defaultTimeout);
 

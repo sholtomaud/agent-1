@@ -5,6 +5,7 @@ import { AuditLog } from '../src/core/audit.ts';
 import { MCPClient } from '../src/core/mcp.ts';
 import fs from 'node:fs';
 import http from 'node:http';
+import { z } from 'zod';
 
 test('AgentRuntime - should handle a multi-step loop with tool calls', async (t) => {
   const dbFile = 'test_runtime.db';
@@ -26,7 +27,7 @@ test('AgentRuntime - should handle a multi-step loop with tool calls', async (t)
       }
     });
   });
-  await new Promise<void>(resolve => server.listen(8081, resolve));
+  await new Promise<void>(resolve => server.listen(8086, resolve));
 
   // Mock MCP tool
   const toolCode = `
@@ -45,7 +46,10 @@ test('AgentRuntime - should handle a multi-step loop with tool calls', async (t)
 
   const audit = new AuditLog(dbFile);
   const mcp = new MCPClient('node', ['test_runtime_tool.js']);
-  const runtime = new AgentRuntime(audit, mcp, 'http://localhost:8081');
+  const runtime = new AgentRuntime(audit, mcp, 'http://localhost:8086');
+
+  // Register tool schema
+  runtime.registerTool('test', z.object({ val: z.number() }));
 
   const finalAnswer = await runtime.run('What is the echo of 42?');
 
