@@ -27,9 +27,17 @@ export async function streamLLM(url: string, prompt: string): Promise<string> {
 
     // EARLY TOOL DETECTION
     // In a real llama.cpp response, the text might be wrapped in JSON like {"content": "..."}
-    // For this implementation, we search for the tool call pattern in the raw stream
+    // For this implementation, we search for the tool call pattern in the raw stream.
+    // We return once we have a potentially complete JSON object that starts with {"tool"
     if (buffer.includes('{"tool"')) {
-      return buffer; // short-circuit
+      const start = buffer.indexOf('{"tool"');
+      const possibleJson = buffer.slice(start);
+      try {
+        JSON.parse(possibleJson);
+        return buffer; // Found a complete, valid tool call!
+      } catch {
+        // Not yet complete, keep reading
+      }
     }
   }
 
