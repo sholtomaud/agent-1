@@ -2,6 +2,7 @@ IMAGE_NAME     = veritas-agent
 CONTAINER_NAME = veritas-agent-app
 PORT           = 3000
 DATA_DIR       = $(abspath data)
+LLM_URL        ?= http://localhost:8080/completion
 
 .PHONY: all start build run stop clean logs shell test
 
@@ -39,6 +40,7 @@ run: build
 		--publish $(PORT):$(PORT) \
 		--env DB_PATH=/data/agent_v3.db \
 		--env MODE=server \
+		--env LLM_URL="$(LLM_URL)" \
 		"$(IMAGE_NAME)"
 
 	@echo "✅ App is running."
