@@ -4,7 +4,7 @@ For future AI agents working on VeritasAgent:
 
 ## Core Principles
 
-- **Native Only**: Do not add any 3rd party dependencies. All code must use Node.js built-in modules only (e.g., `node:sqlite`, `node:child_process`, `node:test`, `node:crypto`).
+- **Native Only**: Do not add any 3rd party dependencies. All code must use Node.js built-in modules only (e.g., `node:sqlite`, `node:child_process`, `node:test`, `node:crypto`). **Exception: `zod` is allowed for schema validation.**
 - **TypeScript Support**: Use `.ts` files and ensure they run with `node --experimental-strip-types`. Do not use `tsc` for compilation or build steps.
 - **Deterministic & Auditable**: Every tool call and significant agent action must be logged in the `audit` table in SQLite.
 - **TDD (Test-Driven Development)**: Write tests in the `tests/` directory using the native `node:test` runner. All new features must have test coverage.
@@ -27,5 +27,5 @@ For future AI agents working on VeritasAgent:
 ## Gotchas
 
 - **SQLite is Experimental**: Always use the correct experimental flags or check for `DatabaseSync` availability.
-- **No NPM**: Do not create a `package.json` with dependencies unless it's strictly for metadata.
+- **No NPM**: Do not create a `package.json` with dependencies unless it's strictly for metadata. **Exception: `zod` is allowed.**
 - **Streaming LLM**: The `streamLLM` function expects a standard llama.cpp response format. Mock it for testing if a real server is unavailable.

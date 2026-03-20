@@ -31,17 +31,62 @@ VeritasAgent is a deterministic, verifiable agent runtime designed for safety, r
 
 No installation required! Just clone the repo and run.
 
-### Usage
+### Configuration
+
+The agent can be configured using environment variables:
+
+- `LLM_URL`: The URL of the LLM server (default: `http://localhost:8080/completion`).
+- `DB_PATH`: The path to the SQLite audit log (default: `agent_v3.db`).
+- `MODE`: Set to `server` to enable the REST API, or `cli` for the interactive mode (default: `cli`).
+- `PORT`: The port for the REST API (default: `3000`).
+
+### Usage (Local)
 
 ```bash
 node --experimental-strip-types src/index.ts
 ```
 
-### Running Tests
+### Running Tests (Local)
 
 ```bash
 node --test --experimental-strip-types tests/*.test.ts
 ```
+
+### Containerization (Apple Container)
+
+VeritasAgent is designed to run in Apple containers for isolation. A `Makefile` is provided for convenience.
+
+#### Prerequisites
+
+- Apple `container` CLI installed and configured.
+
+#### Getting Started with Containers
+
+1. **Build and Run**:
+   ```bash
+   make run
+   ```
+   This will build the image, start the container in `server` mode, and tail the logs.
+
+2. **Run Tests in Container (TDD)**:
+   ```bash
+   make test
+   ```
+
+3. **Stop and Clean**:
+   ```bash
+   make stop
+   make clean
+   ```
+
+4. **Accessing the Server**:
+   When running in server mode, you can interact with the agent via POST requests to `/chat`:
+   ```bash
+   curl -X POST http://localhost:3000/chat -d '{"message": "Add 5 and 10"}'
+   ```
+
+5. **Connecting to External LLM**:
+   To connect the containerized agent to a `llama.cpp` server running on your host machine, set the `LLM_URL` in the `Makefile` or provide it as an environment variable to the `container run` command. Note that "absolute" addressing should work for the host from within the container.
 
 ## Built-in Tools
 
