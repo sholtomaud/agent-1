@@ -86,7 +86,12 @@ VeritasAgent is designed to run in Apple containers for isolation. A `Makefile` 
    ```
 
 5. **Connecting to External LLM**:
-   To connect the containerized agent to a `llama.cpp` server running on your host machine, set the `LLM_URL` in the `Makefile` or provide it as an environment variable to the `container run` command. Note that "absolute" addressing should work for the host from within the container.
+   To connect the containerized agent to a `llama.cpp` server (or any compatible LLM server) running on your host machine, you must provide the `LLM_URL` using your host's network IP address (e.g., `http://192.168.1.5:8080/completion`). Note that `localhost` inside the container refers to the container itself, not your host machine.
+
+   You can override the default `LLM_URL` when running `make`:
+   ```bash
+   LLM_URL="http://192.168.1.5:8080/completion" make run
+   ```
 
 ## Built-in Tools
 
