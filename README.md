@@ -109,9 +109,17 @@ VeritasAgent is designed to run in isolated environments using the Apple `contai
 
 3. **Accessing the Containerized Agent**:
    In `server` mode, use `curl` to interact with the agent:
-   ```bash
-   curl -X POST http://localhost:3000/chat -d '{"message": "Add 5 and 10"}'
-   ```
+
+   - **Send a Basic Query**:
+     ```bash
+     curl -X POST http://localhost:3000/chat -d '{"message": "Add 5 and 10"}'
+     ```
+
+   - **Start a TDD Workflow**:
+     ```bash
+     curl -X POST http://localhost:3000/chat \
+       -d '{"message": "tdd:ISSUE-456:ui-refactor:Refactor the sidebar component"}'
+     ```
 
 4. **Running Tests & Utilities**:
    ```bash

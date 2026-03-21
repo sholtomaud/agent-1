@@ -76,7 +76,28 @@ process.stdin.on('data', (chunk) => {
         }
         try {
           const { message } = JSON.parse(body);
-          const answer = await runtime.run(message);
+          let answer: string;
+
+          if (message.toLowerCase().startsWith('tdd:')) {
+            const parts = message.split(':');
+            let issue_id = 'manual';
+            let feature_name = 'manual';
+            let task = '';
+
+            if (parts.length >= 4) {
+              issue_id = parts[1];
+              feature_name = parts[2];
+              task = parts.slice(3).join(':').trim();
+            } else {
+              task = message.slice(4).trim();
+            }
+
+            const workflow = new TDDWorkflow(runtime, { issue_id, feature_name });
+            answer = await workflow.run(task);
+          } else {
+            answer = await runtime.run(message);
+          }
+
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ answer }));
         } catch (err: any) {
