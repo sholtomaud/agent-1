@@ -25,11 +25,23 @@ VeritasAgent is a deterministic, verifiable agent runtime designed for safety, r
 ### Prerequisites
 
 - Node.js v25+ (supports `node:sqlite` and `--experimental-strip-types`).
-- A llama.cpp server or compatible HTTP LLM server running on `http://localhost:8080`.
+- Apple `container` CLI (if running in a container).
+- A `llama.cpp` server running locally or accessible via network.
+
+### LLM Server Setup (llama.cpp)
+
+To use VeritasAgent, you need a compatible LLM server. We recommend `llama.cpp`.
+
+1. **Download and Build llama.cpp**: Follow instructions at [github.com/ggerganov/llama.cpp](https://github.com/ggerganov/llama.cpp).
+2. **Start the Server**:
+   ```bash
+   ./llama-server -m path/to/your/model.gguf --port 8080 --n-predict 512
+   ```
+   *Note: Ensure the server is listening on `0.0.0.0` if you plan to access it from a container.*
 
 ### Installation
 
-No installation required! Just clone the repo and run.
+No installation required! Just clone the repo and ensure you have the prerequisites.
 
 ### Configuration
 
@@ -42,6 +54,7 @@ The agent can be configured using environment variables:
 
 ### Usage (Local)
 
+Run the agent in interactive CLI mode:
 ```bash
 node --experimental-strip-types src/index.ts
 ```
@@ -52,13 +65,9 @@ node --experimental-strip-types src/index.ts
 node --test --experimental-strip-types tests/*.test.ts
 ```
 
-### Containerization (Apple Container)
+### Containerization (Apple Container CLI)
 
-VeritasAgent is designed to run in Apple containers for isolation. A `Makefile` is provided for convenience.
-
-#### Prerequisites
-
-- Apple `container` CLI installed and configured.
+VeritasAgent is designed to run in isolated environments using the Apple `container` CLI. A `Makefile` is provided to simplify management.
 
 #### Getting Started with Containers
 
@@ -66,37 +75,45 @@ VeritasAgent is designed to run in Apple containers for isolation. A `Makefile` 
    ```bash
    make run
    ```
-   This will build the image, start the container in `server` mode, and tail the logs.
+   This command ensures the `container` system service is started, builds the image, and launches the container in `server` mode.
 
-2. **Run Tests in Container (TDD)**:
+2. **Run Tests in Container**:
    ```bash
    make test
    ```
 
-3. **Stop and Clean**:
+3. **Check Logs**:
    ```bash
-   make stop
+   make logs
+   ```
+
+4. **Stop and Clean**:
+   ```bash
    make clean
    ```
 
-4. **Accessing the Server**:
-   When running in server mode, you can interact with the agent via POST requests to `/chat`:
+#### Connecting to Local llama.cpp from Container
+
+When the agent runs inside a container, `localhost` refers to the container itself. To connect to a `llama.cpp` server running on your host machine:
+
+1. **Find your Host IP**:
+   On macOS, you can find your network IP using:
    ```bash
-   curl -X POST http://localhost:3000/chat -d '{"message": "Add 5 and 10"}'
+   ipconfig getifaddr en0
    ```
+   (e.g., `192.168.1.5`)
 
-5. **Connecting to External LLM**:
-   To connect the containerized agent to a `llama.cpp` server (or any compatible LLM server) running on your host machine, you must provide the `LLM_URL` using your host's network IP address (e.g., `http://192.168.1.5:8080/completion`). Note that `localhost` inside the container refers to the container itself, not your host machine.
-
-   You can override the default `LLM_URL` when running `make`:
+2. **Run with LLM_URL**:
+   Pass your host IP to the `make` command:
    ```bash
    LLM_URL="http://192.168.1.5:8080/completion" make run
    ```
 
 ## Built-in Tools
 
-- `sqlite_query`: Executes a SQL query against the local database.
-- `add`: A simple mathematical tool for demonstration.
+- `vfs_tool`: Virtual File System operations (read/write files).
+- `test_runner_tool`: Executes tests and returns results.
+- `sqlite_query`: Executes SQL queries (via internal MCP mock).
 
 ## Documentation
 
