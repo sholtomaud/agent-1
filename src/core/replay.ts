@@ -13,7 +13,7 @@ export class ReplayVerifier {
     let lastHash: string | null = null;
 
     for (const row of rows) {
-      const { ts, step, type, payload, prev_hash, hash } = row;
+      const { ts, step, type, payload, phase, issue_id, feature_name, phase_result, prev_hash, hash } = row;
 
       // Verify prev_hash matches
       if (prev_hash !== lastHash) {
@@ -24,7 +24,7 @@ export class ReplayVerifier {
       }
 
       // Re-calculate hash
-      const hashInput = `${ts}|${step}|${type}|${payload}|${prev_hash || ''}`;
+      const hashInput = `${ts}|${step}|${type}|${payload}|${phase || ''}|${issue_id || ''}|${feature_name || ''}|${phase_result || ''}|${prev_hash || ''}`;
       const calculatedHash = createHash('sha256').update(hashInput).digest('hex');
 
       if (calculatedHash !== hash) {
