@@ -52,24 +52,44 @@ The agent can be configured using environment variables:
 - `MODE`: Set to `server` to enable the REST API, or `cli` for the interactive mode (default: `cli`).
 - `PORT`: The port for the REST API (default: `3000`).
 
-### Usage (Local)
+---
 
+## Usage (Local)
+
+### 1. Start the Agent
 Run the agent in interactive CLI mode:
 ```bash
 node --experimental-strip-types src/index.ts
 ```
 
-### Running Tests (Local)
-
-```bash
-node --test --experimental-strip-types tests/*.test.ts
+### 2. Basic Interaction
+Once the CLI is running (indicated by the `> ` prompt), you can send queries:
+```text
+> What is 5 plus 10?
 ```
+The agent will plan the steps, execute the necessary tools, and provide a final answer.
 
-### Containerization (Apple Container CLI)
+### 3. Start a TDD Workflow
+To start a structured Test-Driven Development workflow, use the `tdd:` prefix:
+```text
+> tdd:ISSUE-123:math-feature:Implement a prime number checker in src/math.ts
+```
+The agent will then enter a multi-phase workflow (Decompose -> DefineTests -> DefineCode -> RunTests).
+
+### 4. Verify LLM Connection
+To quickly check if the agent can communicate with your `llama.cpp` server, try a simple query:
+```text
+> hello
+```
+If the connection is successful, you should see the agent's planning process and a response. If it fails, check your `LLM_URL` and ensures `llama.cpp` is running.
+
+---
+
+## Containerization (Apple Container CLI)
 
 VeritasAgent is designed to run in isolated environments using the Apple `container` CLI. A `Makefile` is provided to simplify management.
 
-#### Getting Started with Containers
+### Getting Started with Containers
 
 1. **Build and Run**:
    ```bash
@@ -77,46 +97,44 @@ VeritasAgent is designed to run in isolated environments using the Apple `contai
    ```
    This command ensures the `container` system service is started, builds the image, and launches the container in `server` mode.
 
-2. **Run Tests in Container**:
+2. **Connecting to Local llama.cpp from Container**:
+   When the agent runs inside a container, `localhost` refers to the container itself. To connect to a `llama.cpp` server running on your host machine:
+
+   - **Find your Host IP**:
+     On macOS: `ipconfig getifaddr en0` (e.g., `192.168.1.5`)
+   - **Run with LLM_URL**:
+     ```bash
+     LLM_URL="http://192.168.1.5:8080/completion" make run
+     ```
+
+3. **Accessing the Containerized Agent**:
+   In `server` mode, use `curl` to interact with the agent:
    ```bash
-   make test
+   curl -X POST http://localhost:3000/chat -d '{"message": "Add 5 and 10"}'
    ```
 
-3. **Check Logs**:
+4. **Running Tests & Utilities**:
    ```bash
-   make logs
+   make test   # Run all tests inside the container
+   make logs   # Tail container logs
+   make clean  # Stop and remove the container and image
    ```
 
-4. **Stop and Clean**:
-   ```bash
-   make clean
-   ```
+---
 
-#### Connecting to Local llama.cpp from Container
+## Development
 
-When the agent runs inside a container, `localhost` refers to the container itself. To connect to a `llama.cpp` server running on your host machine:
+### Running Tests (Local)
+```bash
+node --test --experimental-strip-types tests/*.test.ts
+```
 
-1. **Find your Host IP**:
-   On macOS, you can find your network IP using:
-   ```bash
-   ipconfig getifaddr en0
-   ```
-   (e.g., `192.168.1.5`)
-
-2. **Run with LLM_URL**:
-   Pass your host IP to the `make` command:
-   ```bash
-   LLM_URL="http://192.168.1.5:8080/completion" make run
-   ```
-
-## Built-in Tools
-
+### Built-in Tools
 - `vfs_tool`: Virtual File System operations (read/write files).
 - `test_runner_tool`: Executes tests and returns results.
 - `sqlite_query`: Executes SQL queries (via internal MCP mock).
 
 ## Documentation
-
 - [Functional Requirements](./REQUIREMENTS.MD)
 - [Agent Instructions](./AGENTS.MD)
 - [Roadmap / TODO](./TODO.MD)
