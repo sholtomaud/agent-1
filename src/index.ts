@@ -1,6 +1,9 @@
 import { AuditLog } from './core/audit.ts';
 import { MCPClient } from './core/mcp.ts';
 import { AgentRuntime } from './core/runtime.ts';
+import { TDDWorkflow } from './core/workflow.ts';
+import { VFSTool, VFSArgsSchema } from './tools/vfs_tool.ts';
+import { TestRunnerTool, TestRunnerArgsSchema } from './tools/test_runner_tool.ts';
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import fs from 'node:fs';
@@ -54,6 +57,13 @@ process.stdin.on('data', (chunk) => {
 
   const runtime = new AgentRuntime(audit, mcp, llmUrl);
 
+  // Register tools
+  const vfsTool = new VFSTool();
+  runtime.registerTool('vfs_tool', VFSArgsSchema, (args) => vfsTool.execute(args));
+
+  const testRunner = new TestRunnerTool();
+  runtime.registerTool('test_runner_tool', TestRunnerArgsSchema, (args) => testRunner.execute(args));
+
   const mode = process.env.MODE || 'cli';
 
   if (mode === 'server') {
@@ -98,8 +108,28 @@ process.stdin.on('data', (chunk) => {
       if (user.toLowerCase() === 'exit') break;
 
       try {
-        const answer = await runtime.run(user);
-        console.log('\nFinal:', answer);
+        if (user.toLowerCase().startsWith('tdd:')) {
+          // Format: tdd:issue_id:feature_name:task
+          const parts = user.split(':');
+          let issue_id = 'manual';
+          let feature_name = 'manual';
+          let task = '';
+
+          if (parts.length >= 4) {
+            issue_id = parts[1];
+            feature_name = parts[2];
+            task = parts.slice(3).join(':').trim();
+          } else {
+            task = user.slice(4).trim();
+          }
+
+          const workflow = new TDDWorkflow(runtime, { issue_id, feature_name });
+          const answer = await workflow.run(task);
+          console.log('\nWorkflow Result:', answer);
+        } else {
+          const answer = await runtime.run(user);
+          console.log('\nFinal:', answer);
+        }
       } catch (err: any) {
         console.error('\n❌ Error:', err.message);
       }

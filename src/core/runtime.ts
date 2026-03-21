@@ -11,23 +11,23 @@ export type ToolSchema = {
 export class AgentRuntime {
   private maxSteps = 5;
   private maxRetries = 2;
-  private audit: AuditLog;
   private mcp: MCPClient;
   private llmUrl: string;
   private tools: Map<string, ToolSchema> = new Map();
+  public auditLog: AuditLog;
 
   constructor(
     audit: AuditLog,
     mcp: MCPClient,
     llmUrl: string
   ) {
-    this.audit = audit;
+    this.auditLog = audit;
     this.mcp = mcp;
     this.llmUrl = llmUrl;
   }
 
-  registerTool(name: string, schema: z.ZodType<any>) {
-    this.tools.set(name, { name, schema: schema as any });
+  registerTool(name: string, schema: z.ZodType<any>, handler?: (args: any) => Promise<any>) {
+    this.tools.set(name, { name, schema: schema as any, handler } as any);
   }
 
   private promptBuilder(history: string, user: string): string {
@@ -92,7 +92,7 @@ Assistant:
       const prompt = this.promptBuilder(history, userInput);
       const raw = await streamLLM(this.llmUrl, prompt);
 
-      this.audit.log(step, 'llm_raw', raw);
+      this.auditLog.log(step, 'llm_raw', raw);
 
       const toolCall = this.parseTool(raw);
 
@@ -107,7 +107,7 @@ Assistant:
 
       while (!valid && retries < this.maxRetries) {
         retries++;
-        this.audit.log(step, 'retry', { original: toolCall, error, attempt: retries });
+        this.auditLog.log(step, 'retry', { original: toolCall, error, attempt: retries });
 
         const retryPrompt = `
 Your previous tool call was invalid:
@@ -139,8 +139,16 @@ Please fix the tool call. Output ONLY valid JSON.
       }
 
       // EXECUTE TOOL
-      const result = await this.mcp.call(toolCall.tool, toolCall.args);
-      this.audit.log(step, 'tool_result', result);
+      const tool = this.tools.get(toolCall.tool);
+      let result;
+      if (tool && (tool as any).handler) {
+        const handlerResult = await (tool as any).handler(toolCall.args);
+        result = { result: handlerResult };
+      } else {
+        result = await this.mcp.call(toolCall.tool, toolCall.args);
+      }
+
+      this.auditLog.log(step, 'tool_result', result);
 
       // APPEND TO HISTORY
       history += `
